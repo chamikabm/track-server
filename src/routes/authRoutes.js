@@ -17,4 +17,26 @@ router.post('/singup', async (req, res) => {
   }
 });
 
+router.post('/singin', async (req, res) => {
+  const { email, password } = req.body;
+
+  if(!email || !password) {
+    return res.status(422).send('Email and Password should be provided!');
+  }
+
+  const user = await User.findOne({ email });
+  if(!user) {
+    return res.status(422).send({ error: 'Invalid password or email.'});
+  }
+
+  try {
+    await user.comparePassword(password);
+    const token = jwt.sign({ userId: user._id }, 'MY_SECRET_KEY');
+    res.send({ token })
+  } catch (err) {
+    console.log('Something went wrong while comparing the passwords. ', err);
+    return res.status(422).send('Invalid password or email.');
+  }
+});
+
 module.exports = router;
